@@ -5,24 +5,20 @@ const authenticateToken = (req, res, next) => {
   const authHeader = req.headers["authorization"];
 
   if (!authHeader) {
-    console.log("Authorization header missing");
     return res.sendStatus(401); // Unauthorized
   }
 
   const token = authHeader.split(" ")[1];
 
   if (!token) {
-    console.log("Token missing from Authorization header");
     return res.sendStatus(401); // Unauthorized
   }
 
   jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
     if (err) {
       if (err.name === "TokenExpiredError") {
-        console.log("Token expired");
         return res.status(403).json({ error: "token expired" }); // Forbidden
       }
-      console.log("Token verification failed", err);
       return res.sendStatus(403); // Forbidden
     }
     const currentTime = Date.now(); // Current time in milliseconds

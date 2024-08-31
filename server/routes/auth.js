@@ -21,11 +21,19 @@ router.post("/register", async (req, res) => {
 
 // Token Endpoint
 router.post("/token", async (req, res) => {
-  const { grant_type, username, password, refresh_token, code, redirect_uri } =
-    req.body;
+  const {
+    grant_type,
+    username,
+    password,
+    refresh_token,
+    code,
+    redirect_uri,
+    scope = "",
+  } = req.body;
 
   try {
     let client_id, client_secret;
+    const scopes = scope.split(" ");
 
     if (
       req.headers.authorization &&
@@ -58,15 +66,22 @@ router.post("/token", async (req, res) => {
         clientId: client_id,
         accessToken,
         refreshToken,
-        expiresAt: Date.now() + 3600000,
+        expiresAt: Date.now() + 3600,
       });
       await token.save();
+
+      // Generate ID Token if the "openid" scope is present
+      let idToken;
+      if (scopes.includes("openid")) {
+        idToken = createIdToken(user, client_id);
+      }
 
       return res.json({
         access_token: accessToken,
         refresh_token: refreshToken,
+        id_token: idToken, // Return the ID token if generated
         token_type: "Bearer",
-        expires_in: 3600,
+        expires_in: 60,
       });
     } else if (grant_type === "client_credentials") {
       // Client Credentials Grant
@@ -80,7 +95,9 @@ router.post("/token", async (req, res) => {
       const accessToken = jwt.sign(
         { sub: client.clientId },
         process.env.JWT_SECRET,
-        { expiresIn: process.env.JWT_EXPIRATION }
+        {
+          expiresIn: process.env.JWT_EXPIRATION,
+        }
       );
       const refreshToken = jwt.sign(
         { sub: client.clientId },
@@ -89,19 +106,21 @@ router.post("/token", async (req, res) => {
           expiresIn: "7d",
         }
       );
+
       const token = new Token({
         clientId: client.clientId,
         accessToken,
         refreshToken,
-        expiresAt: Date.now() + 3600000,
+        expiresAt: Date.now() + 3600,
       });
       await token.save();
 
+      // No ID token for client_credentials grant, as it's not a user-based flow
       return res.json({
         access_token: accessToken,
-        refresh_token: refreshToken, // Return the refresh token
+        refresh_token: refreshToken,
         token_type: "Bearer",
-        expires_in: 3600,
+        expires_in: 60,
       });
     } else if (grant_type === "refresh_token") {
       // Refresh Token Grant
@@ -132,15 +151,23 @@ router.post("/token", async (req, res) => {
         clientId: existingToken.clientId,
         accessToken: newAccessToken,
         refreshToken: newRefreshToken,
-        expiresAt: Date.now() + 3600000,
+        expiresAt: Date.now() + 3600,
       });
       await newToken.save();
+
+      // Generate ID Token if the "openid" scope is present
+      let idToken;
+      if (scopes.includes("openid")) {
+        const user = await User.findById(existingToken.userId);
+        idToken = createIdToken(user, existingToken.clientId);
+      }
 
       return res.json({
         access_token: newAccessToken,
         refresh_token: newRefreshToken,
+        id_token: idToken, // Return the ID token if generated
         token_type: "Bearer",
-        expires_in: 3600,
+        expires_in: 60,
       });
     } else if (grant_type === "authorization_code") {
       // Authorization Code Grant
@@ -177,15 +204,23 @@ router.post("/token", async (req, res) => {
           clientId: client_id,
           accessToken,
           refreshToken,
-          expiresAt: Date.now() + 3600000,
+          expiresAt: Date.now() + 3600,
         });
         await token.save();
+
+        // Generate ID Token if the "openid" scope is present
+        let idToken;
+        if (scopes.includes("openid")) {
+          const user = await User.findById(decoded.sub);
+          idToken = createIdToken(user, client_id);
+        }
 
         return res.json({
           access_token: accessToken,
           refresh_token: refreshToken,
+          id_token: idToken, // Return the ID token if generated
           token_type: "Bearer",
-          expires_in: 3600,
+          expires_in: 60,
         });
       } catch (err) {
         return res.status(500).json({ error: "Invalid authorization code" });
@@ -257,7 +292,12 @@ router.post("/register", async (req, res) => {
 
 // Client Registration
 router.post("/client/register", async (req, res) => {
-  const { client_name, redirect_uris } = req.body;
+  const {
+    client_name,
+    redirect_uris,
+    post_logout_redirect_uris,
+    response_types,
+  } = req.body;
 
   try {
     const clientId = `client_${Math.random().toString(36).substr(2, 9)}`;
@@ -267,6 +307,8 @@ router.post("/client/register", async (req, res) => {
       clientId,
       clientSecret,
       redirectUris: redirect_uris,
+      postLogoutRedirectUris: post_logout_redirect_uris,
+      responseTypes: response_types,
       grants: ["authorization_code", "refresh_token", "client_credentials"],
     });
 
@@ -277,5 +319,17 @@ router.post("/client/register", async (req, res) => {
     res.status(500).json({ error: "Error registering client" });
   }
 });
+
+const createIdToken = (user, clientId) => {
+  const payload = {
+    sub: user._id,
+    aud: clientId,
+    iss: process.env.ISSUER, // Your OIDC issuer URL, e.g., "https://your-domain.com"
+    iat: Math.floor(Date.now() / 1000),
+    exp: Math.floor(Date.now() / 1000) + parseInt("60"),
+  };
+
+  return jwt.sign(payload, process.env.JWT_SECRET);
+};
 
 module.exports = router;
