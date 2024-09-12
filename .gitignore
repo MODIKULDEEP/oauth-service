@@ -1,2 +1,7 @@
 /server/node_modules
 /server/.env
+/admin-server
+/admin-server/node_modules
+/admin-server/.env
+/admin-frontend/node_modules
+/admin-frontend/.env

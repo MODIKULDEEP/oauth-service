@@ -73,7 +73,8 @@ router.post("/token", async (req, res) => {
       // Generate ID Token if the "openid" scope is present
       let idToken;
       if (scopes.includes("openid")) {
-        idToken = createIdToken(user, client_id);
+        // idToken = createIdToken(user, client_id);
+        idToken = createIdToken(user);
       }
 
       return res.json({
@@ -91,6 +92,7 @@ router.post("/token", async (req, res) => {
       });
       if (!client)
         return res.status(401).json({ error: "Invalid client credentials" });
+      console.log(client.clientId);
 
       const accessToken = jwt.sign(
         { sub: client.clientId },
@@ -159,7 +161,8 @@ router.post("/token", async (req, res) => {
       let idToken;
       if (scopes.includes("openid")) {
         const user = await User.findById(existingToken.userId);
-        idToken = createIdToken(user, existingToken.clientId);
+        // idToken = createIdToken(user, existingToken.clientId);
+        idToken = createIdToken(user);
       }
 
       return res.json({
@@ -212,7 +215,8 @@ router.post("/token", async (req, res) => {
         let idToken;
         if (scopes.includes("openid")) {
           const user = await User.findById(decoded.sub);
-          idToken = createIdToken(user, client_id);
+          // idToken = createIdToken(user, client_id);
+          idToken = createIdToken(user);
         }
 
         return res.json({
@@ -320,10 +324,60 @@ router.post("/client/register", async (req, res) => {
   }
 });
 
-const createIdToken = (user, clientId) => {
+// User Login thru id and password from portal
+router.post("/userLogin", async (req, res) => {
+  // Retrieve username and password from request body
+  const { username, password } = req.body;
+
+  // Validate username and password
+  if (!username || !password) {
+    return res
+      .status(400)
+      .json({ error: "Please provide username and password" });
+  }
+  // Find the user with the provided username and populate the role
+  const user = await User.findOne({ username }).select("+password");
+  // Check if user with the provided username exists
+  if (!user) {
+    return res.status(401).json({ error: "Invalid credentials" });
+  }
+
+  let FetchedUser = user;
+
+  // Compare the provided password with the hashed password using the schema method
+  const passwordMatch = await user.comparePassword(password);
+  if (!passwordMatch) {
+    return res.status(401).json({ error: "Invalid credentials" });
+  }
+
+  const cookieOptions = {
+    expires: new Date(Date.now() + 60000),
+    httpOnly: true,
+  };
+
+  const AuthToken = createIdToken(FetchedUser);
+  res.status(200).cookie("AuthToken", AuthToken, cookieOptions).json({
+    success: true,
+    user: FetchedUser,
+    accessToken: AuthToken,
+  });
+});
+
+// User Logout from portal
+router.post("/userLogout", async (req, res) => {
+  // clear the cookie of the user
+  res.cookie("AuthToken", null, {
+    expires: new Date(Date.now()),
+    httpOnly: true,
+  });
+  res.status(200).json({ success: true, message: "User Logout Successfully" });
+});
+
+// const createIdToken = (user, clientId) => {
+const createIdToken = (user) => {
   const payload = {
     sub: user._id,
-    aud: clientId,
+    // aud: clientId,
     iss: process.env.ISSUER, // Your OIDC issuer URL, e.g., "https://your-domain.com"
     iat: Math.floor(Date.now() / 1000),
     exp: Math.floor(Date.now() / 1000) + parseInt("60"),

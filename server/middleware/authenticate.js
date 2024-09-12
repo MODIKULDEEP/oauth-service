@@ -3,12 +3,16 @@ const jwt = require("jsonwebtoken");
 
 const authenticateToken = (req, res, next) => {
   const authHeader = req.headers["authorization"];
+  const { AuthToken } = req.cookies;
 
-  if (!authHeader) {
+  let token;
+  if (authHeader) {
+    token = authHeader.split(" ")[1];
+  } else if (AuthToken) {
+    token = AuthToken;
+  } else {
     return res.sendStatus(401); // Unauthorized
   }
-
-  const token = authHeader.split(" ")[1];
 
   if (!token) {
     return res.sendStatus(401); // Unauthorized
@@ -21,6 +25,8 @@ const authenticateToken = (req, res, next) => {
       }
       return res.sendStatus(403); // Forbidden
     }
+    console.log(user);
+
     const currentTime = Date.now(); // Current time in milliseconds
     const expirationTime = user.exp * 1000; // Token expiration time in milliseconds
 
@@ -30,8 +36,8 @@ const authenticateToken = (req, res, next) => {
     const timeLeftInSeconds = Math.floor(timeLeft / 1000);
     const timeLeftInMinutes = Math.floor(timeLeftInSeconds / 60);
 
-    console.log(`Time left until token expires: ${timeLeftInSeconds} seconds`);
-    console.log(`Time left until token expires: ${timeLeftInMinutes} minutes`);
+    // console.log(`Time left until token expires: ${timeLeftInSeconds} seconds`);
+    // console.log(`Time left until token expires: ${timeLeftInMinutes} minutes`);
     req.user = user;
     next();
   });
