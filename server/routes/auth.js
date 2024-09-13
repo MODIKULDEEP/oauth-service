@@ -294,36 +294,6 @@ router.post("/register", async (req, res) => {
   }
 });
 
-// Client Registration
-router.post("/client/register", async (req, res) => {
-  const {
-    client_name,
-    redirect_uris,
-    post_logout_redirect_uris,
-    response_types,
-  } = req.body;
-
-  try {
-    const clientId = `client_${Math.random().toString(36).substr(2, 9)}`;
-    const clientSecret = `secret_${Math.random().toString(36).substr(2, 9)}`;
-
-    const client = new Client({
-      clientId,
-      clientSecret,
-      redirectUris: redirect_uris,
-      postLogoutRedirectUris: post_logout_redirect_uris,
-      responseTypes: response_types,
-      grants: ["authorization_code", "refresh_token", "client_credentials"],
-    });
-
-    await client.save();
-
-    res.status(201).json({ client_id: clientId, client_secret: clientSecret });
-  } catch (err) {
-    res.status(500).json({ error: "Error registering client" });
-  }
-});
-
 // User Login thru id and password from portal
 router.post("/userLogin", async (req, res) => {
   // Retrieve username and password from request body

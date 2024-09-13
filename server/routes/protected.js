@@ -1,6 +1,8 @@
 // routes/protected.js
 const express = require("express");
 const User = require("../models/User");
+const Token = require("../models/Token");
+const Client = require("../models/Client");
 const authenticateToken = require("../middleware/authenticate");
 
 const router = express.Router();
@@ -40,6 +42,57 @@ router.get("/.well-known/openid-configuration", (req, res) => {
     id_token_signing_alg_values_supported: ["RS256"],
     scopes_supported: ["openid", "profile", "email"],
   });
+});
+
+router.get("/userdata", authenticateToken, async (req, res) => {
+  const { sub } = req.user;
+
+  try {
+    const tokenData = await Client.find({ userId: sub }).select(
+      "_id client_name clientId clientSecret"
+    );
+    console.log(tokenData);
+    res.json({ message: "This is a protected resource", tokenData: tokenData });
+  } catch (error) {
+    console.log(error);
+
+    res.status(500).json({ error: "Error getting user data" });
+  }
+});
+
+// Client Registration
+router.post("/client/register", authenticateToken, async (req, res) => {
+  const {
+    client_name,
+    redirect_uris,
+    post_logout_redirect_uris,
+    response_types,
+  } = req.body;
+  const { sub } = req.user;
+
+  try {
+    const clientId = `client_${Math.random().toString(36).substr(2, 9)}`;
+    const clientSecret = `secret_${Math.random().toString(36).substr(2, 9)}`;
+
+    const client = new Client({
+      userId: sub,
+      client_name,
+      clientId,
+      clientSecret,
+      redirectUris: redirect_uris,
+      postLogoutRedirectUris: post_logout_redirect_uris,
+      responseTypes: response_types,
+      grants: ["authorization_code", "refresh_token", "client_credentials"],
+    });
+
+    await client.save();
+
+    res.status(201).json({ client_id: clientId, client_secret: clientSecret });
+  } catch (err) {
+    console.log(err);
+
+    res.status(500).json({ error: "Error registering client" });
+  }
 });
 
 module.exports = router;

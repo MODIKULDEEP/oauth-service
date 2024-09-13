@@ -3,3 +3,31 @@
   margin: 0px;
   padding: 0px;
 }
+
+h3 {
+  text-align: center;
+  margin: 30px auto;
+}
+
+.center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+table,
+th,
+td {
+  border: 1px solid;
+  border-collapse: collapse;
+}
+
+thead,
+td {
+  text-align: center;
+}
+
+th,
+td {
+  padding: 15px;
+}

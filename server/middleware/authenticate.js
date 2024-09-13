@@ -25,7 +25,6 @@ const authenticateToken = (req, res, next) => {
       }
       return res.sendStatus(403); // Forbidden
     }
-    console.log(user);
 
     const currentTime = Date.now(); // Current time in milliseconds
     const expirationTime = user.exp * 1000; // Token expiration time in milliseconds
