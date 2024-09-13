@@ -11,7 +11,6 @@ const apiClient = axios.create({
 export const loginUser = async (data) => {
   try {
     const response = await apiClient.post("/auth/userLogin", data);
-    console.log(response.data);
 
     return response.data;
   } catch (error) {
@@ -23,7 +22,6 @@ export const loginUser = async (data) => {
 export const registerUser = async (data) => {
   try {
     const response = await apiClient.post("/auth/register", data);
-    console.log(response.data);
 
     return response.data;
   } catch (error) {
@@ -44,7 +42,6 @@ export const protectedData = async () => {
 export const userData = async () => {
   try {
     const response = await apiClient.get("/api/userdata");
-    console.log(response);
 
     return response.data;
   } catch (error) {
@@ -56,7 +53,6 @@ export const userData = async () => {
 export const logout = async () => {
   try {
     const response = await apiClient.post("/auth/userLogout");
-    console.log(response.data);
 
     return response.data;
   } catch (error) {
@@ -76,7 +72,6 @@ export const registerNewApp = async (count) => {
   };
   try {
     const response = await apiClient.post("/api/client/register", data);
-    console.log(response.data);
 
     return response.data;
   } catch (error) {

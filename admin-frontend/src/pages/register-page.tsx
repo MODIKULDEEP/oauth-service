@@ -32,7 +32,6 @@ export default function Register() {
       //   alert(JSON.stringify(data));
       navigate("/login");
     } catch (error) {
-      console.log(error);
       setError("username", {
         message: "username is already taken.",
       });

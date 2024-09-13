@@ -29,7 +29,6 @@ export default function ClientPage() {
 
   const createApp = async () => {
     try {
-      console.log(registerdApps?.length + 1);
       await registerNewApp(registerdApps?.length + 1);
       getData();
     } catch (error) {

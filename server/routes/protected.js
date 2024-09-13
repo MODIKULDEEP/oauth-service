@@ -51,11 +51,8 @@ router.get("/userdata", authenticateToken, async (req, res) => {
     const tokenData = await Client.find({ userId: sub }).select(
       "_id client_name clientId clientSecret"
     );
-    console.log(tokenData);
     res.json({ message: "This is a protected resource", tokenData: tokenData });
   } catch (error) {
-    console.log(error);
-
     res.status(500).json({ error: "Error getting user data" });
   }
 });
@@ -89,8 +86,6 @@ router.post("/client/register", authenticateToken, async (req, res) => {
 
     res.status(201).json({ client_id: clientId, client_secret: clientSecret });
   } catch (err) {
-    console.log(err);
-
     res.status(500).json({ error: "Error registering client" });
   }
 });

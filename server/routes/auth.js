@@ -92,7 +92,6 @@ router.post("/token", async (req, res) => {
       });
       if (!client)
         return res.status(401).json({ error: "Invalid client credentials" });
-      console.log(client.clientId);
 
       const accessToken = jwt.sign(
         { sub: client.clientId },

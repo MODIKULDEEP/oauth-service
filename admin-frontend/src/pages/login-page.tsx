@@ -32,7 +32,6 @@ export default function Login() {
       //   alert(JSON.stringify(data));
       navigate("/client");
     } catch (error) {
-      console.log(error);
       setError("username", {
         message: "username is already taken.",
       });
