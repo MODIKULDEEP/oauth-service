@@ -26,17 +26,22 @@ const authenticateToken = (req, res, next) => {
       return res.sendStatus(403); // Forbidden
     }
 
-    const currentTime = Date.now(); // Current time in milliseconds
-    const expirationTime = user.exp * 1000; // Token expiration time in milliseconds
+    // const currentTime = Date.now(); // Current time in milliseconds
+    // const expirationTime = user.exp * 1000; // Token expiration time in milliseconds
 
-    const timeLeft = expirationTime - currentTime; // Time left in milliseconds
+    // const timeLeft = expirationTime - currentTime; // Time left in milliseconds
 
-    // Convert timeLeft to a more readable format (e.g., seconds, minutes)
-    const timeLeftInSeconds = Math.floor(timeLeft / 1000);
-    const timeLeftInMinutes = Math.floor(timeLeftInSeconds / 60);
+    // const days = Math.floor(timeLeft / (1000 * 60 * 60 * 24));
+    // const hours = Math.floor(
+    //   (timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
+    // );
+    // const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
 
-    // console.log(`Time left until token expires: ${timeLeftInSeconds} seconds`);
-    // console.log(`Time left until token expires: ${timeLeftInMinutes} minutes`);
+    // console.log(
+    //   `Time left until token expires: ${days} days ${hours} hours ${minutes} minutes`
+    // );
+    console.log(user);
+
     req.user = user;
     next();
   });

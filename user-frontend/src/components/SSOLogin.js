@@ -1,7 +1,7 @@
 // src/components/SSOLogin.js
 import React from "react";
 
-const CLIENT_ID = "client_euufn7mv2";
+const CLIENT_ID = "client_7ebu7zp25";
 const REDIRECT_URI = "http://localhost:3000/callback";
 const SSO_AUTHORIZE_URL = `http://localhost:8010/auth/authorize?response_type=code&client_id=${CLIENT_ID}&redirect_uri=${REDIRECT_URI}`;
 

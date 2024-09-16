@@ -58,7 +58,7 @@ router.post("/token", async (req, res) => {
         expiresIn: process.env.JWT_EXPIRATION,
       });
       const refreshToken = jwt.sign({ sub: user._id }, process.env.JWT_SECRET, {
-        expiresIn: "7d",
+        expiresIn: "60d",
       });
 
       const token = new Token({
@@ -66,7 +66,7 @@ router.post("/token", async (req, res) => {
         clientId: client_id,
         accessToken,
         refreshToken,
-        expiresAt: Date.now() + 3600,
+        expiresAt: Date.now() + 60 * 24 * 3600 * 1000, // expires in 60 days
       });
       await token.save();
 
@@ -82,7 +82,7 @@ router.post("/token", async (req, res) => {
         refresh_token: refreshToken,
         id_token: idToken, // Return the ID token if generated
         token_type: "Bearer",
-        expires_in: 60,
+        expires_in: 30 * 24 * 3600, // 30 days in seconds
       });
     } else if (grant_type === "client_credentials") {
       // Client Credentials Grant
@@ -104,7 +104,7 @@ router.post("/token", async (req, res) => {
         { sub: client.clientId },
         process.env.JWT_SECRET,
         {
-          expiresIn: "7d",
+          expiresIn: "60d",
         }
       );
 
@@ -112,7 +112,7 @@ router.post("/token", async (req, res) => {
         clientId: client.clientId,
         accessToken,
         refreshToken,
-        expiresAt: Date.now() + 3600,
+        expiresAt: Date.now() + 60 * 24 * 3600 * 1000, // expires in 60 days
       });
       await token.save();
 
@@ -121,7 +121,7 @@ router.post("/token", async (req, res) => {
         access_token: accessToken,
         refresh_token: refreshToken,
         token_type: "Bearer",
-        expires_in: 60,
+        expires_in: 30 * 24 * 3600, // 30 days in seconds
       });
     } else if (grant_type === "refresh_token") {
       // Refresh Token Grant
@@ -144,7 +144,7 @@ router.post("/token", async (req, res) => {
       const newRefreshToken = jwt.sign(
         { sub: existingToken.userId },
         process.env.JWT_SECRET,
-        { expiresIn: "7d" }
+        { expiresIn: "60d" }
       );
 
       const newToken = new Token({
@@ -152,7 +152,7 @@ router.post("/token", async (req, res) => {
         clientId: existingToken.clientId,
         accessToken: newAccessToken,
         refreshToken: newRefreshToken,
-        expiresAt: Date.now() + 3600,
+        expiresAt: Date.now() + 60 * 24 * 3600 * 1000, // expires in 60 days
       });
       await newToken.save();
 
@@ -169,7 +169,7 @@ router.post("/token", async (req, res) => {
         refresh_token: newRefreshToken,
         id_token: idToken, // Return the ID token if generated
         token_type: "Bearer",
-        expires_in: 60,
+        expires_in: 30 * 24 * 3600, // 30 days in seconds
       });
     } else if (grant_type === "authorization_code") {
       // Authorization Code Grant
@@ -198,7 +198,7 @@ router.post("/token", async (req, res) => {
         const refreshToken = jwt.sign(
           { sub: decoded.sub },
           process.env.JWT_SECRET,
-          { expiresIn: "7d" }
+          { expiresIn: "60d" }
         );
 
         const token = new Token({
@@ -206,7 +206,7 @@ router.post("/token", async (req, res) => {
           clientId: client_id,
           accessToken,
           refreshToken,
-          expiresAt: Date.now() + 3600,
+          expiresAt: Date.now() + 60 * 24 * 3600 * 1000, // expires in 60 days
         });
         await token.save();
 
@@ -223,7 +223,7 @@ router.post("/token", async (req, res) => {
           refresh_token: refreshToken,
           id_token: idToken, // Return the ID token if generated
           token_type: "Bearer",
-          expires_in: 60,
+          expires_in: 30 * 24 * 3600, // 30 days in seconds
         });
       } catch (err) {
         return res.status(500).json({ error: "Invalid authorization code" });
@@ -320,7 +320,7 @@ router.post("/userLogin", async (req, res) => {
   }
 
   const cookieOptions = {
-    expires: new Date(Date.now() + 60000),
+    expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
     httpOnly: true,
   };
 
@@ -349,7 +349,7 @@ const createIdToken = (user) => {
     // aud: clientId,
     iss: process.env.ISSUER, // Your OIDC issuer URL, e.g., "https://your-domain.com"
     iat: Math.floor(Date.now() / 1000),
-    exp: Math.floor(Date.now() / 1000) + parseInt("60"),
+    exp: Math.floor(Date.now() / 1000) + 30 * 24 * 60 * 60,
   };
 
   return jwt.sign(payload, process.env.JWT_SECRET);
