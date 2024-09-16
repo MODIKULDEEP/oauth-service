@@ -83,16 +83,7 @@ export const logout = async (): Promise<any> => {
   }
 };
 
-export const registerNewApp = async (count: number): Promise<any> => {
-  const data: AppData = {
-    client_name: "MyApp" + count,
-    redirect_uris: [
-      "http://localhost:3000/callback",
-      "https://oauth.pstmn.io/v1/callback",
-    ],
-    post_logout_redirect_uris: ["http://localhost:3000/logout-success"],
-    response_types: ["code", "id_token"],
-  };
+export const registerNewApp = async (data: AppData): Promise<any> => {
   try {
     const response: AxiosResponse<any> = await apiClient.post(
       "/api/client/register",

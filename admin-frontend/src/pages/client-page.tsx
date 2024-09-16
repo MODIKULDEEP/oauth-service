@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { userData, registerNewApp, logout } from "../api/api";
+import { userData, logout } from "../api/api";
 
 interface TokenData {
   _id: string;
@@ -27,14 +27,10 @@ export default function ClientPage() {
     }
   };
 
-  const createApp = async () => {
-    try {
-      await registerNewApp(registerdApps?.length + 1);
-      getData();
-    } catch (error) {
-      console.log(error);
-    }
+  const handleCreateApp = () => {
+    navigate("/create-app");
   };
+
   const logoutUser = async () => {
     try {
       await logout();
@@ -49,7 +45,7 @@ export default function ClientPage() {
       <h3 className="text-2xl font-bold mb-4 text-center">Register Your App</h3>
       <div className="flex justify-center space-x-4 mb-8">
         <button
-          onClick={createApp}
+          onClick={handleCreateApp}
           className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
         >
           Create App

@@ -45,13 +45,30 @@ router.get("/.well-known/openid-configuration", (req, res) => {
 });
 
 router.get("/userdata", authenticateToken, async (req, res) => {
-  const { sub } = req.user;
+  const { sub, client_id } = req.user;
+  let tokenData;
 
   try {
-    const tokenData = await Client.find({ userId: sub }).select(
-      "_id client_name clientId clientSecret"
-    );
-    res.json({ message: "This is a protected resource", tokenData: tokenData });
+    if (client_id) {
+      tokenData = await Client.find({ clientId: client_id }).select(
+        "_id client_name clientId clientSecret"
+      );
+      res.json({
+        message: "This is a protected resource",
+        tokenData: tokenData,
+      });
+    } else if (sub) {
+      tokenData = await Client.find({ userId: sub })
+        .select("_id client_name clientId clientSecret")
+        .populate("userId")
+        .select("_id username");
+      res.json({
+        message: "This is a protected resource",
+        tokenData: tokenData,
+      });
+    } else {
+      res.status(500).json({ error: "Error getting user data" });
+    }
   } catch (error) {
     res.status(500).json({ error: "Error getting user data" });
   }
