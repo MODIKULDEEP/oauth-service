@@ -45,38 +45,55 @@ export default function ClientPage() {
   };
 
   return (
-    <>
-      <h3>Register Your App</h3>
-      <button onClick={createApp}>Create App</button>
-      <button onClick={logoutUser}>Logout</button>
-      <div className="center">
-        <table>
+    <div className="container mx-auto px-4 py-8">
+      <h3 className="text-2xl font-bold mb-4 text-center">Register Your App</h3>
+      <div className="flex justify-center space-x-4 mb-8">
+        <button
+          onClick={createApp}
+          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+        >
+          Create App
+        </button>
+        <button
+          onClick={logoutUser}
+          className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
+        >
+          Logout
+        </button>
+      </div>
+      <div className="overflow-x-auto">
+        <table className="w-full table-auto">
           <thead>
-            <tr>
-              <th>No.</th>
-              <th>App Name</th>
-              <th>Client Id</th>
-              <th>Client Secret</th>
+            <tr className="bg-gray-200">
+              <th className="px-4 py-2">No.</th>
+              <th className="px-4 py-2">App Name</th>
+              <th className="px-4 py-2">Client Id</th>
+              <th className="px-4 py-2">Client Secret</th>
             </tr>
           </thead>
           <tbody>
             {registerdApps?.length !== 0 ? (
               registerdApps?.map((app, index) => (
-                <tr key={app._id}>
-                  <td>{index + 1}</td>
-                  <td>{app.client_name}</td>
-                  <td>{app.clientId}</td>
-                  <td>{app.clientSecret}</td>
+                <tr
+                  key={app._id}
+                  className={index % 2 === 0 ? "bg-gray-100" : ""}
+                >
+                  <td className="border px-4 py-2">{index + 1}</td>
+                  <td className="border px-4 py-2">{app.client_name}</td>
+                  <td className="border px-4 py-2">{app.clientId}</td>
+                  <td className="border px-4 py-2">{app.clientSecret}</td>
                 </tr>
               ))
             ) : (
               <tr>
-                <td colSpan={4}>No Data Found</td>
+                <td colSpan={4} className="border px-4 py-2 text-center">
+                  No Data Found
+                </td>
               </tr>
             )}
           </tbody>
         </table>
       </div>
-    </>
+    </div>
   );
 }

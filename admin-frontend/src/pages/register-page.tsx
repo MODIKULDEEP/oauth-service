@@ -1,7 +1,7 @@
 import { useForm, SubmitHandler } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { registerUser } from "../api/api";
 
 const schema = z.object({
@@ -77,6 +77,12 @@ export default function Register() {
             {isSubmitting ? "Loading..." : "Register"}
           </button>
         </form>
+        <p className="mt-4">
+          Already have an account?{" "}
+          <Link to="/login" className="text-blue-500 hover:underline">
+            Login here
+          </Link>
+        </p>
       </div>
     </>
   );
