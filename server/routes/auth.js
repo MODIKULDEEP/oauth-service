@@ -255,20 +255,24 @@ router.post("/login", async (req, res) => {
   const { username, password, client_id, redirect_uri, scope, state } =
     req.body;
 
-  const user = await User.findOne({ username });
-  if (!user || !(await user.comparePassword(password))) {
-    return res.status(401).json({ error: "Invalid credentials" });
+  try {
+    const user = await User.findOne({ username });
+    if (!user || !(await user.comparePassword(password))) {
+      return res.status(401).json({ error: "Invalid credentials" });
+    }
+
+    const authorizationCode = jwt.sign(
+      { sub: user._id, client_id, scope },
+      process.env.JWT_SECRET,
+      { expiresIn: process.env.JWT_EXPIRATION }
+    );
+
+    const redirectUrl = `${redirect_uri}?code=${authorizationCode}&state=${state}`;
+    res.status(200).json({ redirectUrl });
+  } catch (error) {
+    console.error("Login error:", error);
+    res.status(500).json({ error: "Internal server error" });
   }
-
-  const authorizationCode = jwt.sign(
-    { sub: user._id, client_id, scope },
-    process.env.JWT_SECRET,
-    { expiresIn: process.env.JWT_EXPIRATION }
-  );
-
-  // Redirect back to the client with the authorization code
-  const redirectUrl = `${redirect_uri}?code=${authorizationCode}&state=${state}`;
-  res.redirect(redirectUrl);
 });
 
 // User Registration

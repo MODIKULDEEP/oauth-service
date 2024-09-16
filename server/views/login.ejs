@@ -1,13 +1,107 @@
-<form action="/auth/login" method="post">
-  <input type="hidden" name="client_id" value="<%= client_id %>" />
-  <input type="hidden" name="redirect_uri" value="<%= redirect_uri %>" />
-  <input type="hidden" name="state" value="<%= state %>" />
+<style>
+  body {
+    overflow: hidden;
+    margin: 0;
+  }
 
-  <label for="username">Username:</label>
-  <input type="text" name="username" id="username" required />
+  .container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+  }
 
-  <label for="password">Password:</label>
-  <input type="password" name="password" id="password" required />
+  .login-form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    background: linear-gradient(135deg, #f6d365, #fda085);
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    margin-bottom: 16px;
+  }
 
-  <button type="submit">Login</button>
-</form>
+  .login-form label {
+    font-size: 1.125rem;
+    font-weight: bold;
+    margin-bottom: 8px;
+  }
+
+  .login-form input {
+    margin-bottom: 16px;
+    padding: 8px;
+    border: 1px solid #e2e8f0;
+    border-radius: 4px;
+    width: 100%;
+    max-width: 300px;
+  }
+
+  .login-form button {
+    background-color: #4299e1;
+    color: white;
+    font-weight: bold;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+
+  .login-form button:hover {
+    background-color: #3182ce;
+  }
+
+  .error-message {
+    color: #e53e3e;
+    font-size: 1rem;
+    margin-bottom: 16px;
+    padding: 8px;
+    border: 1px solid #e53e3e;
+    border-radius: 4px;
+    background-color: #ffe5e5;
+  }
+</style>
+
+<div class="container">
+  <form id="loginForm" class="login-form">
+    <input type="hidden" name="client_id" value="<%= client_id %>" />
+    <input type="hidden" name="redirect_uri" value="<%= redirect_uri %>" />
+    <input type="hidden" name="state" value="<%= state %>" />
+
+    <label for="username">Username:</label>
+    <input type="text" name="username" id="username" required />
+
+    <label for="password">Password:</label>
+    <input type="password" name="password" id="password" required />
+
+    <button type="submit">Login</button>
+  </form>
+  <div id="errorMessage" class="error-message" style="display: none;"></div>
+</div>
+
+<script>
+document.getElementById('loginForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const formData = new FormData(e.target);
+  const response = await fetch('/auth/login', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(Object.fromEntries(formData)),
+  });
+
+  if (response.ok) {
+    const data = await response.json();
+    window.location.href = data.redirectUrl;
+  } else {
+    const errorData = await response.json();
+    const errorMessage = document.getElementById('errorMessage');
+    errorMessage.textContent = errorData.error;
+    errorMessage.style.display = 'block';
+  }
+});
+</script>
