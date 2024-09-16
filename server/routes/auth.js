@@ -73,8 +73,7 @@ router.post("/token", async (req, res) => {
       // Generate ID Token if the "openid" scope is present
       let idToken;
       if (scopes.includes("openid")) {
-        // idToken = createIdToken(user, client_id);
-        idToken = createIdToken(user);
+        idToken = createIdToken(user, client_id);
       }
 
       return res.json({
@@ -160,8 +159,7 @@ router.post("/token", async (req, res) => {
       let idToken;
       if (scopes.includes("openid")) {
         const user = await User.findById(existingToken.userId);
-        // idToken = createIdToken(user, existingToken.clientId);
-        idToken = createIdToken(user);
+        idToken = createIdToken(user, existingToken.clientId);
       }
 
       return res.json({
@@ -214,8 +212,7 @@ router.post("/token", async (req, res) => {
         let idToken;
         if (scopes.includes("openid")) {
           const user = await User.findById(decoded.sub);
-          // idToken = createIdToken(user, client_id);
-          idToken = createIdToken(user);
+          idToken = createIdToken(user, client_id);
         }
 
         return res.json({
@@ -342,11 +339,10 @@ router.post("/userLogout", async (req, res) => {
   res.status(200).json({ success: true, message: "User Logout Successfully" });
 });
 
-// const createIdToken = (user, clientId) => {
-const createIdToken = (user) => {
+const createIdToken = (user, clientId = undefined) => {
   const payload = {
     sub: user._id,
-    // aud: clientId,
+    aud: clientId,
     iss: process.env.ISSUER, // Your OIDC issuer URL, e.g., "https://your-domain.com"
     iat: Math.floor(Date.now() / 1000),
     exp: Math.floor(Date.now() / 1000) + 30 * 24 * 60 * 60,

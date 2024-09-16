@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { protectedData, userData, registerNewApp, logout } from "../api/api.js";
+import { userData, registerNewApp, logout } from "../api/api";
 
 interface TokenData {
   _id: string;
