@@ -112,6 +112,7 @@ router.post("/token", async (req, res) => {
         accessToken,
         refreshToken,
         expiresAt: Date.now() + 60 * 24 * 3600 * 1000, // expires in 60 days
+        mode: client.mode,
       });
       await token.save();
 
@@ -152,6 +153,7 @@ router.post("/token", async (req, res) => {
         accessToken: newAccessToken,
         refreshToken: newRefreshToken,
         expiresAt: Date.now() + 60 * 24 * 3600 * 1000, // expires in 60 days
+        mode: existingToken.mode,
       });
       await newToken.save();
 
@@ -205,6 +207,7 @@ router.post("/token", async (req, res) => {
           accessToken,
           refreshToken,
           expiresAt: Date.now() + 60 * 24 * 3600 * 1000, // expires in 60 days
+          mode: client.mode,
         });
         await token.save();
 
@@ -296,40 +299,50 @@ router.post("/register", async (req, res) => {
 
 // User Login thru id and password from portal
 router.post("/userLogin", async (req, res) => {
-  // Retrieve username and password from request body
   const { username, password } = req.body;
 
-  // Validate username and password
   if (!username || !password) {
     return res
       .status(400)
       .json({ error: "Please provide username and password" });
   }
-  // Find the user with the provided username and populate the role
+
   const user = await User.findOne({ username }).select("+password");
-  // Check if user with the provided username exists
   if (!user) {
     return res.status(401).json({ error: "Invalid credentials" });
   }
 
-  let FetchedUser = user;
-
-  // Compare the provided password with the hashed password using the schema method
   const passwordMatch = await user.comparePassword(password);
   if (!passwordMatch) {
     return res.status(401).json({ error: "Invalid credentials" });
   }
+
+  const accessToken = jwt.sign({ sub: user._id }, process.env.JWT_SECRET, {
+    expiresIn: process.env.JWT_EXPIRATION,
+  });
+  const refreshToken = jwt.sign({ sub: user._id }, process.env.JWT_SECRET, {
+    expiresIn: "60d",
+  });
+
+  const token = new Token({
+    userId: user._id,
+    accessToken,
+    refreshToken,
+    expiresAt: Date.now() + 60 * 24 * 3600 * 1000, // expires in 60 days
+    mode: "production", // Assuming mode is production for user login
+  });
+  await token.save();
 
   const cookieOptions = {
     expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
     httpOnly: true,
   };
 
-  const AuthToken = createIdToken(FetchedUser);
-  res.status(200).cookie("AuthToken", AuthToken, cookieOptions).json({
+  res.status(200).cookie("AuthToken", accessToken, cookieOptions).json({
     success: true,
-    user: FetchedUser,
-    accessToken: AuthToken,
+    user,
+    accessToken,
+    refreshToken,
   });
 });
 

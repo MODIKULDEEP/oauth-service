@@ -4,12 +4,17 @@ const User = require("../models/User");
 const Token = require("../models/Token");
 const Client = require("../models/Client");
 const authenticateToken = require("../middleware/authenticate");
+const modeCheck = require("../middleware/modeCheck");
 
 const router = express.Router();
 
 // Protected Route
-router.get("/resource", authenticateToken, (req, res) => {
-  res.json({ message: "This is a protected resource", user: req.user });
+router.get("/resource", authenticateToken, modeCheck, (req, res) => {
+  if (req.appMode === "production") {
+    res.json({ message: "This is production data", user: req.user });
+  } else {
+    res.json({ message: "This is test data", user: req.user });
+  }
 });
 
 router.get("/userinfo", authenticateToken, async (req, res) => {
@@ -51,15 +56,26 @@ router.get("/userdata", authenticateToken, async (req, res) => {
   try {
     if (client_id) {
       tokenData = await Client.find({ clientId: client_id }).select(
-        "_id client_name clientId clientSecret"
+        "_id client_name clientId clientSecret mode"
       );
-      res.json({
+      if (tokenData[0].mode === "test") {
+        return res.json({
+          message: "This is a test resource",
+          tokenData: tokenData,
+        });
+      } else if (tokenData[0].mode === "production") {
+        return res.json({
+          message: "This is a production resource",
+          tokenData: tokenData,
+        });
+      }
+      return res.json({
         message: "This is a protected resource",
         tokenData: tokenData,
       });
     } else if (sub) {
       tokenData = await Client.find({ userId: sub })
-        .select("_id client_name clientId clientSecret")
+        .select("_id client_name clientId clientSecret mode")
         .populate("userId")
         .select("_id username");
       res.json({
@@ -81,12 +97,13 @@ router.post("/client/register", authenticateToken, async (req, res) => {
     redirect_uris,
     post_logout_redirect_uris,
     response_types,
+    mode,
   } = req.body;
   const { sub } = req.user;
 
   try {
     const clientId = `client_${Math.random().toString(36).substr(2, 9)}`;
-    const clientSecret = `secret_${Math.random().toString(36).substr(2, 9)}`;
+    const clientSecret = generateClientSecret(mode);
 
     const client = new Client({
       userId: sub,
@@ -97,6 +114,7 @@ router.post("/client/register", authenticateToken, async (req, res) => {
       postLogoutRedirectUris: post_logout_redirect_uris,
       responseTypes: response_types,
       grants: ["authorization_code", "refresh_token", "client_credentials"],
+      mode,
     });
 
     await client.save();
@@ -107,10 +125,18 @@ router.post("/client/register", authenticateToken, async (req, res) => {
   }
 });
 
+function generateClientSecret(mode) {
+  const prefix = mode === "test" ? "test_" : "prod_";
+  return `${prefix}secret_${Math.random().toString(36).substr(2, 9)}`;
+}
+
 // Get app details
 router.get("/client/:id", authenticateToken, async (req, res) => {
   try {
-    const client = await Client.findOne({ _id: req.params.id, userId: req.user.sub });
+    const client = await Client.findOne({
+      _id: req.params.id,
+      userId: req.user.sub,
+    });
     if (!client) {
       return res.status(404).json({ error: "App not found" });
     }
@@ -121,20 +147,48 @@ router.get("/client/:id", authenticateToken, async (req, res) => {
 });
 
 // Update app
-router.put("/client/:id", authenticateToken, async (req, res) => {
-  const { client_name, redirect_uris, post_logout_redirect_uris, response_types } = req.body;
+router.put("/client/:appId", authenticateToken, async (req, res) => {
+  const { appId } = req.params;
+  const {
+    client_name,
+    redirect_uris,
+    post_logout_redirect_uris,
+    response_types,
+    mode,
+  } = req.body;
+
   try {
-    const updatedClient = await Client.findOneAndUpdate(
-      { _id: req.params.id, userId: req.user.sub },
-      { client_name, redirectUris: redirect_uris, postLogoutRedirectUris: post_logout_redirect_uris, responseTypes: response_types },
-      { new: true }
-    );
-    if (!updatedClient) {
-      return res.status(404).json({ error: "App not found" });
+    const client = await Client.findById(appId);
+
+    if (!client) {
+      return res.status(404).json({ error: "Client not found" });
     }
-    res.json(updatedClient);
+
+    // Check if the mode has changed
+    if (client.mode !== mode) {
+      // Generate a new client secret
+      client.clientSecret = generateClientSecret(mode);
+
+      // Invalidate all tokens for this client
+      await Token.deleteMany({ clientId: client.clientId });
+    }
+
+    // Update client fields
+    client.client_name = client_name;
+    client.redirectUris = redirect_uris;
+    client.postLogoutRedirectUris = post_logout_redirect_uris;
+    client.responseTypes = response_types;
+    client.mode = mode;
+
+    await client.save();
+
+    res.json({
+      message: "Client updated successfully",
+      client_id: client.clientId,
+      client_secret: client.clientSecret,
+    });
   } catch (err) {
-    res.status(500).json({ error: "Error updating app" });
+    res.status(500).json({ error: "Error updating client" });
   }
 });
 

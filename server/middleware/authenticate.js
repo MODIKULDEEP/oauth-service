@@ -1,7 +1,9 @@
 // middleware/authenticate.js
 const jwt = require("jsonwebtoken");
+const Token = require("../models/Token"); // Make sure to import the Token model
+const Client = require("../models/Client"); // Import the Client model
 
-const authenticateToken = (req, res, next) => {
+const authenticateToken = async (req, res, next) => {
   const authHeader = req.headers["authorization"];
   const { AuthToken } = req.cookies;
 
@@ -18,33 +20,34 @@ const authenticateToken = (req, res, next) => {
     return res.sendStatus(401); // Unauthorized
   }
 
-  jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
-    if (err) {
-      if (err.name === "TokenExpiredError") {
-        return res.status(403).json({ error: "token expired" }); // Forbidden
-      }
-      return res.sendStatus(403); // Forbidden
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    // Check if the token exists in the database
+    const tokenExists = await Token.findOne({ accessToken: token });
+    if (!tokenExists) {
+      return res.status(403).json({ error: "Token has been revoked" }); // Forbidden
     }
 
-    // const currentTime = Date.now(); // Current time in milliseconds
-    // const expirationTime = user.exp * 1000; // Token expiration time in milliseconds
+    if (authHeader) {
+      // Check if the client mode matches the token's mode
+      const client = await Client.findOne({ clientId: tokenExists.clientId });
+      if (!client || client.mode !== tokenExists.mode) {
+        await Token.deleteOne({ accessToken: token });
+        return res
+          .status(403)
+          .json({ error: "Token is no longer valid due to mode change" }); // Forbidden
+      }
+    }
 
-    // const timeLeft = expirationTime - currentTime; // Time left in milliseconds
-
-    // const days = Math.floor(timeLeft / (1000 * 60 * 60 * 24));
-    // const hours = Math.floor(
-    //   (timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
-    // );
-    // const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
-
-    // console.log(
-    //   `Time left until token expires: ${days} days ${hours} hours ${minutes} minutes`
-    // );
-    console.log(user);
-
-    req.user = user;
+    req.user = decoded;
     next();
-  });
+  } catch (err) {
+    if (err.name === "TokenExpiredError") {
+      return res.status(403).json({ error: "Token expired" }); // Forbidden
+    }
+    return res.sendStatus(403); // Forbidden
+  }
 };
 
 module.exports = authenticateToken;

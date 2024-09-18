@@ -14,6 +14,7 @@ const schema = z.object({
   response_types: z
     .array(z.enum(["code", "token", "id_token"]))
     .min(1, "At least one response type is required"),
+  mode: z.enum(["test", "production"]),
 });
 
 type FormFields = z.infer<typeof schema>;
@@ -64,6 +65,7 @@ const EditApp: React.FC = () => {
         setValue("redirect_uris", appDetails.redirectUris);
         setValue("post_logout_redirect_uris", appDetails.postLogoutRedirectUris);
         setValue("response_types", appDetails.responseTypes);
+        setValue("mode", appDetails.mode);
         setIsLoading(false);
       } catch (error) {
         console.error("Error fetching app details:", error);
@@ -76,7 +78,10 @@ const EditApp: React.FC = () => {
 
   const onSubmit: SubmitHandler<FormFields> = async (data) => {
     try {
-      await updateApp(appId!, data);
+      const response = await updateApp(appId!, data);
+      if (response.client_secret) {
+        alert(`Mode changed. New client secret: ${response.client_secret}`);
+      }
       navigate("/client");
     } catch (error) {
       console.error("Error updating app:", error);
@@ -206,6 +211,22 @@ const EditApp: React.FC = () => {
           {errors.response_types && (
             <span className="text-red-500 text-sm">
               {errors.response_types.message}
+            </span>
+          )}
+        </div>
+
+        <div className="mb-4">
+          <label className="block mb-2">Mode</label>
+          <select
+            {...register("mode")}
+            className="w-full p-2 border rounded"
+          >
+            <option value="test">Test</option>
+            <option value="production">Production</option>
+          </select>
+          {errors.mode && (
+            <span className="text-red-500 text-sm">
+              {errors.mode.message}
             </span>
           )}
         </div>

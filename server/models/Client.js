@@ -11,6 +11,7 @@ const ClientSchema = new mongoose.Schema({
   // OIDC specific fields
   postLogoutRedirectUris: [{ type: String }],
   responseTypes: [{ type: String }], // e.g., "code", "id_token"
+  mode: { type: String, enum: ['test', 'production'], default: 'test' },
 });
 
 module.exports = mongoose.model("Client", ClientSchema);

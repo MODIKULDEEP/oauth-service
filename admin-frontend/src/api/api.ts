@@ -23,6 +23,7 @@ interface AppData {
   redirect_uris: string[];
   post_logout_redirect_uris: string[];
   response_types: string[];
+  mode: 'test' | 'production';
 }
 
 export const loginUser = async (data: UserData): Promise<any> => {

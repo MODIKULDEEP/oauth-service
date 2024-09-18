@@ -19,6 +19,7 @@ const schema = z.object({
   response_types: z
     .array(z.enum(["code", "token", "id_token"]))
     .min(1, "At least one response type is required"),
+  mode: z.enum(["test", "production"]),
 });
 
 type FormFields = z.infer<typeof schema>;
@@ -36,6 +37,7 @@ const CreateApp: React.FC = () => {
       redirect_uris: [""],
       post_logout_redirect_uris: [""],
       response_types: [],
+      mode: "test",
     },
   });
 
@@ -173,10 +175,26 @@ const CreateApp: React.FC = () => {
           )}
         </div>
 
+        <div className="mb-4">
+          <label className="block mb-2">Mode</label>
+          <select
+            {...register("mode")}
+            className="w-full p-2 border rounded"
+          >
+            <option value="test">Test</option>
+            <option value="production">Production</option>
+          </select>
+          {errors.mode && (
+            <span className="text-red-500 text-sm">
+              {errors.mode.message}
+            </span>
+          )}
+        </div>
+
         <button
           type="submit"
+          className="w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600"
           disabled={isSubmitting}
-          className="w-full p-2 bg-blue-500 text-white rounded disabled:bg-gray-300 disabled:cursor-not-allowed"
         >
           {isSubmitting ? "Creating..." : "Create App"}
         </button>
