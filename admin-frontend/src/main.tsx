@@ -6,6 +6,7 @@ import ClientPage from "./pages/client-page";
 import Register from "./pages/register-page";
 import CreateApp from "./pages/create-app-page";
 import "./index.css";
+import EditApp from "./pages/edit-app-page";
 
 const router = createBrowserRouter([
   {
@@ -23,6 +24,10 @@ const router = createBrowserRouter([
   {
     path: "/create-app",
     element: <CreateApp />,
+  },
+  {
+    path: "/edit-app/:appId",
+    element: <EditApp />,
   },
 ]);
 

@@ -107,4 +107,35 @@ router.post("/client/register", authenticateToken, async (req, res) => {
   }
 });
 
+// Get app details
+router.get("/client/:id", authenticateToken, async (req, res) => {
+  try {
+    const client = await Client.findOne({ _id: req.params.id, userId: req.user.sub });
+    if (!client) {
+      return res.status(404).json({ error: "App not found" });
+    }
+    res.json(client);
+  } catch (err) {
+    res.status(500).json({ error: "Error fetching app details" });
+  }
+});
+
+// Update app
+router.put("/client/:id", authenticateToken, async (req, res) => {
+  const { client_name, redirect_uris, post_logout_redirect_uris, response_types } = req.body;
+  try {
+    const updatedClient = await Client.findOneAndUpdate(
+      { _id: req.params.id, userId: req.user.sub },
+      { client_name, redirectUris: redirect_uris, postLogoutRedirectUris: post_logout_redirect_uris, responseTypes: response_types },
+      { new: true }
+    );
+    if (!updatedClient) {
+      return res.status(404).json({ error: "App not found" });
+    }
+    res.json(updatedClient);
+  } catch (err) {
+    res.status(500).json({ error: "Error updating app" });
+  }
+});
+
 module.exports = router;

@@ -40,6 +40,10 @@ export default function ClientPage() {
     }
   };
 
+  const handleEditApp = (appId: string) => {
+    navigate(`/edit-app/${appId}`);
+  };
+
   return (
     <div className="container mx-auto px-4 py-8">
       <h3 className="text-2xl font-bold mb-4 text-center">Register Your App</h3>
@@ -78,11 +82,19 @@ export default function ClientPage() {
                   <td className="border px-4 py-2">{app.client_name}</td>
                   <td className="border px-4 py-2">{app.clientId}</td>
                   <td className="border px-4 py-2">{app.clientSecret}</td>
+                  <td className="border px-4 py-2">
+                    <button
+                      onClick={() => handleEditApp(app._id)}
+                      className="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-1 px-2 rounded"
+                    >
+                      Edit
+                    </button>
+                  </td>
                 </tr>
               ))
             ) : (
               <tr>
-                <td colSpan={4} className="border px-4 py-2 text-center">
+                <td colSpan={5} className="border px-4 py-2 text-center">
                   No Data Found
                 </td>
               </tr>

@@ -34,7 +34,7 @@ const handleAuthCallback = async (req, res) => {
     tokenService.setTokens(response.data);
     res.status(200).json({ message: "Authentication successful" });
   } catch (error) {
-    console.error("Error exchanging code for tokens:", error);
+    // console.error("Error exchanging code for tokens:", error);
     res.status(500).send("Internal Server Error");
   }
 };

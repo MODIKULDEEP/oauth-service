@@ -95,3 +95,23 @@ export const registerNewApp = async (data: AppData): Promise<any> => {
     throw error;
   }
 };
+
+export const getAppDetails = async (appId: string): Promise<any> => {
+  try {
+    const response: AxiosResponse<any> = await apiClient.get(`/api/client/${appId}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching app details", error);
+    throw error;
+  }
+};
+
+export const updateApp = async (appId: string, data: AppData): Promise<any> => {
+  try {
+    const response: AxiosResponse<any> = await apiClient.put(`/api/client/${appId}`, data);
+    return response.data;
+  } catch (error) {
+    console.error("Error updating app", error);
+    throw error;
+  }
+};
